@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusKeys Pro | VIT Ultimate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --brand: #4f46e5; --bg: #f8fafc; --text: #0f172a; --muted: #64748b; --danger: #ef4444; --success: #22c55e; --yellow: #f59e0b; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.3s; }
+        body { margin: 0; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #e2e8f0; padding: 25px; display: flex; flex-direction: column; }
+        .logo { font-size: 24px; font-weight: 800; color: var(--brand); margin-bottom: 30px; }
+        .nav-item { padding: 14px; border-radius: 12px; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 600; }
+        .nav-item.active { background: #f1f5f9; color: var(--brand); }
+        .urgent-trigger { background: #fee2e2; color: var(--danger); border: 2px dashed var(--danger); margin-top: 10px; }
+
+        /* MAIN */
+        .main { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+
+        /* CARDS */
+        .card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; position: relative; }
+        .card.sold { opacity: 0.6; filter: grayscale(1); }
+        .card-img { width: 100%; height: 180px; object-fit: cover; }
+        .card-body { padding: 20px; }
+        .badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        .sold-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: var(--danger); color: white; padding: 10px 25px; font-weight: 900; z-index: 100; border: 4px solid white; border-radius: 10px; }
+
+        /* URGENT ALERTS */
+        .urgent-card { background: #fff1f2; border: 2px solid var(--danger); border-radius: 15px; padding: 20px; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(239,68,68,0.4); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
+
+        /* CHAT UI */
+        #chatBox { position: fixed; bottom: 20px; right: 20px; width: 340px; height: 500px; background: white; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 2000; border: 1px solid #eee; }
+        .chat-h { background: var(--brand); color: white; padding: 15px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        #chatMsgs { flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 8px; }
+        .m-me { background: var(--brand); color: white; align-self: flex-end; padding: 8px 12px; border-radius: 12px 12px 0 12px; font-size: 13px; }
+        .m-them { background: #e2e8f0; color: black; align-self: flex-start; padding: 8px 12px; border-radius: 12px 12px 12px 0; font-size: 13px; }
+
+        /* MODALS */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; padding: 30px; border-radius: 25px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+        .btn-p { background: var(--brand); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 700; margin-top: 15px; }
+        .hidden { display: none !important; }
+        .stars { color: var(--yellow); cursor: pointer; font-size: 20px; margin: 10px 0; display: flex; justify-content: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="loginSection" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h1 style="color:var(--brand)">CampusKeys Pro</h1>
+        <p>Verified Student Marketplace</p>
+        <button onclick="login()" class="btn-p">Sign In with VIT Email</button>
+    </div>
+</div>
+
+<div id="appSection" class="hidden" style="display:flex; width:100%;">
+    <div class="sidebar">
+        <div class="logo">CKP.PRO</div>
+        <div class="nav-item active" onclick="showTab('m')"><i class="fas fa-home"></i> Marketplace</div>
+        <div class="nav-item" onclick="showTab('s')"><i class="fas fa-plus-circle"></i> Create Listing</div>
+        <div class="nav-item urgent-trigger" onclick="showTab('u')"><i class="fas fa-bolt"></i> URGENT REQUEST</div>
+        <div style="margin-top:auto">
+            <p id="uName" style="font-weight:700; font-size:14px; margin:0;"></p>
+            <button onclick="logout()" style="width:100%; border:none; background:#fee2e2; color:var(--danger); padding:10px; border-radius:8px; margin-top:10px;">Logout</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div id="mView">
+            <div id="urgentAlerts"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1>Marketplace</h1>
+                <input type="text" id="search" placeholder="Search components, books..." style="width:300px; margin:0;" oninput="renderData()">
+            </div>
+            <div class="grid" id="itemList"></div>
+        </div>
+
+        <div id="sView" class="modal hidden">
+            <div class="modal-content">
+                <h3>Post Item</h3>
+                <input type="text" id="title" placeholder="Item Name">
+                <select id="cat">
+                    <option value="Electronics">Project Components</option>
+                    <option value="Books">Books/Notes</option>
+                    <option value="Clothing">Clothing</option>
+                </select>
+                <select id="loc" onchange="document.getElementById('mLoc').classList.toggle('hidden', this.value!=='OTHER')">
+                    <option value="D1">D1 Block</option><option value="D2">D2 Block</option>
+                    <option value="A Block">A Block</option><option value="C Block">C Block</option>
+                    <option value="AB1">AB1</option><option value="AB2">AB2</option>
+                    <option value="AB3">AB3</option><option value="AB4">AB4</option>
+                    <option value="DELTA">DELTA</option><option value="OTHER">Custom Location...</option>
+                </select>
+                <input type="text" id="mLoc" class="hidden" placeholder="Specific Spot">
+                <select id="type" onchange="document.getElementById('fD').classList.toggle('hidden', this.value!=='Rent')">
+                    <option value="Sale">Sale</option><option value="Rent">Rent</option>
+                </select>
+                <div id="fD" class="hidden"><input type="number" id="fine" placeholder="Late Fine (₹/Day)"></div>
+                <input type="number" id="price" placeholder="Price (₹)">
+                <input type="file" id="imgFile">
+                <button class="btn-p" onclick="uploadItem()">Post Item</button>
+                <button onclick="showTab('m')" style="width:100%; border:none; background:none; color:grey; margin-top:10px;">Cancel</button>
+            </div>
+        </div>
+
+        <div id="uView" class="modal hidden">
+            <div class="modal-content" style="border: 2px solid var(--danger)">
+                <h3 style="color:var(--danger)">Emergency Need</h3>
+                <textarea id="uMsg" placeholder="Need a calculator or lab coat right now?"></textarea>
+                <button class="btn-p" style="background:var(--danger)" onclick="uploadUrgent()">Blast Request</button>
+                <button onclick="showTab('m')" style="width:100%; border:none; background:none; color:grey; margin-top:10px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatBox" class="hidden">
+        <div class="chat-h">
+            <span id="chatTitle">Chat</span>
+            <button id="rateBtn" onclick="openRating()" style="background:var(--yellow); border:none; padding:5px 8px; border-radius:5px; font-size:10px; font-weight:bold; cursor:pointer;">RATE SELLER</button>
+            <i class="fas fa-times" onclick="closeChat()" style="cursor:pointer"></i>
+        </div>
+        <div id="chatMsgs"></div>
+        <div style="padding:10px; display:flex; gap:5px; border-top:1px solid #eee">
+            <input type="text" id="chatInput" placeholder="Message..." style="margin:0">
+            <button onclick="sendMsg()" style="background:var(--brand); border:none; color:white; border-radius:10px; padding:0 15px;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="rateModal" class="modal hidden">
+        <div class="modal-content" style="text-align:center">
+            <h3>Rate Seller</h3>
+            <div class="stars" id="stars">
+                <i class="fas fa-star" onclick="setR(1)"></i><i class="fas fa-star" onclick="setR(2)"></i>
+                <i class="fas fa-star" onclick="setR(3)"></i><i class="fas fa-star" onclick="setR(4)"></i>
+                <i class="fas fa-star" onclick="setR(5)"></i>
+            </div>
+            <button class="btn-p" onclick="submitR()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, where, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const config = { apiKey: "AIzaSyBqqMZLJuwSu6WFHH8spkLLxGyZFHXYPXU", authDomain: "campus-keys-pro.firebaseapp.com", projectId: "campus-keys-pro", appId: "1:646491551461:web:11ebf693ab76d41c86860c" };
+    const app = initializeApp(config);
+    const auth = getAuth(app); const db = getFirestore(app); const prov = new GoogleAuthProvider();
+
+    let cid = null; let activeSeller = null; let selR = 0; let items = [], urgents = [];
+
+    window.login = () => signInWithPopup(auth, prov);
+    window.logout = () => signOut(auth);
+    window.showTab = (t) => {
+        document.getElementById('sView').classList.toggle('hidden', t !== 's');
+        document.getElementById('uView').classList.toggle('hidden', t !== 'u');
+    };
+
+    onAuthStateChanged(auth, u => {
+        if(u) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            document.getElementById('uName').innerText = u.displayName;
+            initData();
+        }
+    });
+
+    function initData() {
+        onSnapshot(query(collection(db, "items"), orderBy("ts", "desc")), s => {
+            items = s.docs.map(d => ({id: d.id, ...d.data()}));
+            renderData();
+        });
+        onSnapshot(query(collection(db, "urgents"), orderBy("ts", "desc")), s => {
+            const list = document.getElementById('urgentAlerts'); list.innerHTML = "";
+            s.forEach(d => {
+                const r = d.data();
+                list.innerHTML += `<div class="urgent-card"><b>🔥 URGENT:</b> ${r.msg} <button onclick="openChat('u','${r.o}','Need Help')">Help</button></div>`;
+            });
+        });
+    }
+
+    window.renderData = async () => {
+        const list = document.getElementById('itemList'); list.innerHTML = "";
+        const search = document.getElementById('search').value.toLowerCase();
+        for(const i of items.filter(it => it.title.toLowerCase().includes(search))) {
+            const rDoc = await getDoc(doc(db, "ratings", i.owner));
+            const rVal = rDoc.exists() ? rDoc.data().avg.toFixed(1) + "★" : "New Seller";
+            list.innerHTML += `
+                <div class="card ${i.status==='sold'?'sold':''}">
+                    ${i.status==='sold'?'<div class="sold-stamp">SOLD</div>':''}
+                    <div class="badge">${i.loc}</div>
+                    <img src="${i.img}" class="card-img">
+                    <div class="card-body">
+                        <small style="color:var(--yellow)">${rVal} | ${i.ownerName}</small>
+                        <h3 style="margin:5px 0">${i.title}</h3>
+                        <p style="font-weight:700; color:var(--brand)">₹${i.price}</p>
+                        ${i.status==='active' && i.owner!==auth.currentUser.email ? `<button class="btn-p" onclick="openChat('${i.id}','${i.owner}','${i.title}')">Chat</button>`:''}
+                        ${i.owner===auth.currentUser.email && i.status==='active' ? `<button class="btn-p" style="background:var(--success)" onclick="markSold('${i.id}')">Mark Sold</button>`:''}
+                    </div>
+                </div>`;
+        }
+    };
+
+    window.openChat = (itemId, seller, title) => {
+        document.getElementById('chatBox').classList.remove('hidden');
+        document.getElementById('chatTitle').innerText = title;
+        activeSeller = seller;
+        cid = [auth.currentUser.email, seller, itemId].sort().join("_");
+        onSnapshot(query(collection(db, "chats"), where("cid", "==", cid), orderBy("ts", "asc")), s => {
+            const b = document.getElementById('chatMsgs'); b.innerHTML = "";
+            s.forEach(d => { b.innerHTML += `<div class="${d.data().s===auth.currentUser.email?'m-me':'m-them'}">${d.data().t}</div>`; });
+            b.scrollTop = b.scrollHeight;
+        });
+    };
+
+    window.sendMsg = async () => {
+        const t = document.getElementById('chatInput').value; if(!t) return;
+        await addDoc(collection(db, "chats"), { cid, s: auth.currentUser.email, t, ts: Date.now() });
+        document.getElementById('chatInput').value = "";
+    };
+
+    window.openRating = () => document.getElementById('rateModal').classList.remove('hidden');
+    window.setR = (n) => { selR = n; document.querySelectorAll('.stars i').forEach((s,i) => s.style.color = i<n ? 'var(--yellow)':'#ccc'); };
+    window.submitR = async () => {
+        const ref = doc(db, "ratings", activeSeller); const d = await getDoc(ref);
+        const data = d.exists() ? d.data() : {sum:0, count:0};
+        const nSum = data.sum + selR; const nCount = data.count + 1;
+        await setDoc(ref, {sum:nSum, count:nCount, avg: nSum/nCount});
+        document.getElementById('rateModal').classList.add('hidden');
+    };
+
+    window.uploadItem = async () => {
+        const file = document.getElementById('imgFile').files[0];
+        const r = new FileReader(); r.readAsDataURL(file);
+        r.onload = async (e) => {
+            await addDoc(collection(db, "items"), {
+                title: document.getElementById('title').value, price: document.getElementById('price').value,
+                loc: document.getElementById('loc').value==='OTHER'?document.getElementById('mLoc').value:document.getElementById('loc').value,
+                img: e.target.result, owner: auth.currentUser.email, ownerName: auth.currentUser.displayName, ts: Date.now(), status: 'active'
+            });
+            showTab('m');
+        };
+    };
+
+    window.uploadUrgent = async () => {
+        await addDoc(collection(db, "urgents"), { msg: document.getElementById('uMsg').value, o: auth.currentUser.email, ts: Date.now() });
+        showTab('m');
+    };
+    window.markSold = async (id) => { if(confirm("Sold?")) await updateDoc(doc(db, "items", id), {status:'sold'}); };
+    window.closeChat = () => document.getElementById('chatBox').classList.add('hidden');
+</script>
+</body>
+</html>
